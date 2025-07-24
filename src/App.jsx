@@ -123,7 +123,7 @@ function App() {
 
     return (
       <div>
-        <h1>Arkham Investigator Filter</h1>
+        <h1>Arkham Investigator Roller</h1>
         <div style={{ margin: '1em 0' }}>
           <h3>Class Filters</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1em', justifyContent: 'center' }}>
