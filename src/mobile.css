@@ -1,0 +1,119 @@
+/* Mobile-first responsive styles */
+.mobileCard {
+  width: calc(100% - 2rem);
+  max-width: 420px;
+  margin: 0.5rem 1rem;
+}
+
+.mobileCard img {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  min-height: 200px;
+  object-fit: contain;
+}
+
+.mobileGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  padding: 0.5rem;
+}
+
+.mobileGrid img {
+  width: 100%;
+  height: auto;
+  min-height: 96px;
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .mobileGrid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.cardContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .cardContainer {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  padding: 0.5rem;
+}
+
+.previewCard {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  background: #222;
+  padding: 0.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.previewCard img {
+  width: auto;
+  height: auto;
+  max-width: min(90vw, 400px);
+  max-height: 80vh;
+  object-fit: contain;
+}
+
+.cardPreviewWrapper {
+  position: relative;
+}
+
+.cardPreviewWrapper:hover .previewCard {
+  display: block;
+}
+
+@media (hover: none) {
+  .previewCard {
+    display: none !important;
+  }
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0.5rem;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  text-align: center;
+}
+
+h2 {
+  font-size: clamp(1.2rem, 4vw, 1.5rem);
+}
+
+h3 {
+  font-size: clamp(1rem, 3vw, 1.3rem);
+}
+
+p {
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+}
