@@ -35,8 +35,8 @@ function SelectorPage({
               <p style={{ margin: '0.5rem 0', textAlign: 'center' }}>Health: {current.health} | Sanity: {current.sanity}</p>
               <p style={{ margin: '0.5rem 0', textAlign: 'center' }}>Deckbuilding: {current.deck_options?.map(opt => opt.faction || '').join(', ')}</p>
               <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
-                <button onClick={handleAccept} style={{ padding: '0.5em 2em' }}>Accept</button>
                 <button onClick={handleDeny} style={{ padding: '0.5em 2em' }}>Deny</button>
+                <button onClick={handleAccept} style={{ padding: '0.5em 2em' }}>Accept</button>
               </div>
             </div>
           ) : (
