@@ -20,25 +20,14 @@ function ClassFilterPage({
               <div style={{ marginBottom: 4 }}>
                 {FACTION_ICONS[f] || null}
               </div>
-              <label style={{ marginRight: 8 }}>
+              <label style={{ userSelect: 'none', cursor: 'pointer' }}>
                 <input
-                  type="radio"
-                  name={`faction-${f}`}
-                  value="include"
+                  type="checkbox"
                   checked={factionFilter[f] === 'include'}
-                  onChange={() => handleFactionRadioChange(f, 'include')}
+                  onChange={() => handleFactionRadioChange(f, factionFilter[f] === 'include' ? 'exclude' : 'include')}
+                  style={{ marginRight: '0.5em' }}
                 />
-                Include
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name={`faction-${f}`}
-                  value="exclude"
-                  checked={factionFilter[f] === 'exclude'}
-                  onChange={() => handleFactionRadioChange(f, 'exclude')}
-                />
-                Exclude
+                Included
               </label>
             </div>
           ))}
