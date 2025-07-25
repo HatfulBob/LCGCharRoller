@@ -25,6 +25,8 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import './arkham.css';
 import { fetchInvestigatorCards } from './arkhamApi';
+import ClassFilterPage from './ClassFilterPage';
+import SelectorPage from './SelectorPage';
 
 function shuffle(array) {
   // Fisher-Yates shuffle
@@ -110,136 +112,38 @@ function App() {
   if (loading) return <div>Loading Arkham Horror investigators...</div>;
   if (error) return <div>Error: {error}</div>;
 
-  if (!started) {
-    // Remove duplicate investigators by name+textbox
-    const uniqueInvestigatorMap = {};
-    for (const card of filteredInvestigators) {
-      const key = card.name + '|' + (card.text || '');
-      if (!uniqueInvestigatorMap[key]) {
-        uniqueInvestigatorMap[key] = card;
-      }
+  // Remove duplicate investigators by name+textbox
+  const uniqueInvestigatorMap = {};
+  for (const card of filteredInvestigators) {
+    const key = card.name + '|' + (card.text || '');
+    if (!uniqueInvestigatorMap[key]) {
+      uniqueInvestigatorMap[key] = card;
     }
-    const uniqueInvestigators = Object.values(uniqueInvestigatorMap);
-
-    return (
-      <div>
-        <h1>Arkham Investigator Roller</h1>
-        <div style={{ margin: '1em 0' }}>
-          <h3>Class Filters</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1em', justifyContent: 'center' }}>
-            {factions.map(f => (
-              <div key={f} style={{ border: '1px solid #ccc', borderRadius: 6, padding: '0.5em 1em', background: '#202020ff', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ marginBottom: 4 }}>
-                  {FACTION_ICONS[f] || null}
-                </div>
-                <label style={{ marginRight: 8 }}>
-                  <input
-                    type="radio"
-                    name={`faction-${f}`}
-                    value="include"
-                    checked={factionFilter[f] === 'include'}
-                    onChange={() => handleFactionRadioChange(f, 'include')}
-                  />
-                  Include
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name={`faction-${f}`}
-                    value="exclude"
-                    checked={factionFilter[f] === 'exclude'}
-                    onChange={() => handleFactionRadioChange(f, 'exclude')}
-                  />
-                  Exclude
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div>
-          <h2>Investigators: {uniqueInvestigators.length}</h2>
-          <ul style={{ maxHeight: 600, overflowY: 'auto', listStyle: 'none', padding: 0, display: 'flex', flexWrap: 'wrap', gap: '2em', justifyContent: 'center' }}>
-            {uniqueInvestigators.map(card => (
-              <li key={card.code} style={{ margin: '0.5em 0', minWidth: 340, minHeight: 220, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                {card.code ? (
-                  <img src={`https://assets.arkham.build/optimized/${card.code}.avif`} alt={card.name} style={{ width: 340, height: 220, objectFit: 'contain', borderRadius: 8, boxShadow: '0 2px 12px #0002', background: '#222' }} />
-                ) : (
-                  <div style={{ width: 340, height: 220, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', borderRadius: 8 }}>No Image</div>
-                )}
-                <p style={{ fontWeight: 'bold', textAlign: 'center' }}>{card.name}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <button onClick={startQueue} disabled={uniqueInvestigators.length === 0} style={{ marginTop: '1em', fontSize: '1.2em' }}>
-          Start
-        </button>
-      </div>
-    );
   }
+  const uniqueInvestigators = Object.values(uniqueInvestigatorMap);
 
-  // Card queue UI
-  const current = queue[0];
   return (
-    <div>
-      <h1>Arkham Investigator Selector</h1>
-      <div style={{ margin: '1em 0' }}>
-        <button onClick={() => setStarted(false)}>Back to Filters</button>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', width: '100%', gap: '2em', minHeight: 400 }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          {current ? (
-            <div className="card" style={{ maxWidth: 420, border: '1px solid #aaa', borderRadius: 8, padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              {current.code ? (
-                <img src={`https://assets.arkham.build/optimized/${current.code}.avif`} alt={current.name} style={{ width: 400, height: 260, objectFit: 'contain', borderRadius: 10, boxShadow: '0 2px 16px #0003', marginBottom: 12, background: '#222' }} />
-              ) : (
-                <div style={{ width: 400, height: 260, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', borderRadius: 10, marginBottom: 12 }}>No Image</div>
-              )}
-              <h2>{current.name}</h2>
-              <h3>{current.subname}</h3>
-              <i>({current.pack_name || current.pack || 'Unknown Pack'})</i>
-              <br/>
-              <div style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 8 }}>{FACTION_ICONS[current.faction_code] || null}</div>
-              <p>Health: {current.health} | Sanity: {current.sanity}</p>
-              <p>Deckbuilding: {current.deck_options?.map(opt => opt.faction || '').join(', ')}</p>
-              <div style={{ marginTop: 24 }}>
-                <button onClick={handleAccept} style={{ marginRight: 16 }}>Accept</button>
-                <button onClick={handleDeny}>Deny</button>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <h2>No more investigators in queue.</h2>
-            </div>
-          )}
-        </div>
-        <div style={{ minWidth: 540, maxWidth: 700, background: '#232323', borderRadius: 10, padding: '1em 0.5em', marginTop: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 2px 12px #0003' }}>
-          <h3 style={{ fontSize: '1.3em', marginBottom: '0.5em' }}>Accepted Investigators ({accepted.length}):</h3>
-          <ul style={{
-            listStyle: 'none',
-            padding: 0,
-            margin: 0,
-            display: 'grid',
-            gridTemplateColumns: 'repeat(5, 1fr)',
-            gap: '1em',
-            justifyItems: 'center',
-            alignItems: 'center',
-            width: '100%'
-          }}>
-            {accepted.map(card => (
-              <li key={card.code}>
-                {card.code ? (
-                  <img src={`https://assets.arkham.build/optimized/${card.code}.avif`} alt={card.name} style={{ width: 160, height: 102, objectFit: 'contain', borderRadius: 6, background: '#222' }} />
-                ) : (
-                  <div style={{ width: 160, height: 102, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', borderRadius: 6 }}>No Image</div>
-                )}
-                <div style={{ fontSize: 14, color: '#bbb', textAlign: 'center' }}>{card.name}</div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
+    <>
+      {!started ? (
+        <ClassFilterPage
+          factions={factions}
+          FACTION_ICONS={FACTION_ICONS}
+          factionFilter={factionFilter}
+          handleFactionRadioChange={handleFactionRadioChange}
+          uniqueInvestigators={uniqueInvestigators}
+          startQueue={startQueue}
+        />
+      ) : (
+        <SelectorPage
+          queue={queue}
+          accepted={accepted}
+          handleAccept={handleAccept}
+          handleDeny={handleDeny}
+          setStarted={setStarted}
+          FACTION_ICONS={FACTION_ICONS}
+        />
+      )}
+    </>
   );
 }
 
