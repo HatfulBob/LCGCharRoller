@@ -43,6 +43,9 @@ function ClassFilterPage({
             </div>
           ))}
         </div>
+      <button onClick={startQueue} disabled={uniqueInvestigators.length === 0} style={{ marginTop: '1em', fontSize: '1.2em', padding: '0.5em 2em' }}>
+        Start
+      </button>
       </div>
       <div>
         <h2>Investigators: {uniqueInvestigators.length}</h2>
@@ -59,9 +62,6 @@ function ClassFilterPage({
           ))}
         </ul>
       </div>
-      <button onClick={startQueue} disabled={uniqueInvestigators.length === 0} style={{ marginTop: '1em', fontSize: '1.2em', padding: '0.5em 2em' }}>
-        Start
-      </button>
     </div>
   );
 }
