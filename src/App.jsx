@@ -43,6 +43,7 @@ function App() {
   const [allInvestigators, setAllInvestigators] = useState([]);
   const [filteredInvestigators, setFilteredInvestigators] = useState([]);
   const [filters, setFilters] = useState({});
+  const [selectedSource, setSelectedSource] = useState('official');
   const [queue, setQueue] = useState([]);
   const [accepted, setAccepted] = useState([]);
   const [started, setStarted] = useState(false);
@@ -50,7 +51,8 @@ function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchInvestigatorCards()
+    setLoading(true);
+    fetchInvestigatorCards(selectedSource)
       .then(cards => {
         setAllInvestigators(cards);
         setFilteredInvestigators(cards);
@@ -60,7 +62,7 @@ function App() {
         setError(e && (e.stack || e.toString()));
         setLoading(false);
       });
-  }, []);
+  }, [selectedSource]);
 
 
   // Faction/class filtering with include/exclude logic
@@ -133,6 +135,8 @@ function App() {
           handleFactionRadioChange={handleFactionRadioChange}
           uniqueInvestigators={uniqueInvestigators}
           startQueue={startQueue}
+          selectedSource={selectedSource}
+          onSourceChange={setSelectedSource}
         />
       ) : (
         <SelectorPage

@@ -7,11 +7,33 @@ function ClassFilterPage({
   factionFilter,
   handleFactionRadioChange,
   uniqueInvestigators,
-  startQueue
+  startQueue,
+  selectedSource,
+  onSourceChange
 }) {
   return (
     <div style={{ maxWidth: '100vw', overflowX: 'hidden', padding: '0.5rem' }}>
       <h1>Arkham Investigator Roller</h1>
+      <div style={{ margin: '1em 0' }}>
+        <h3>Source Selection</h3>
+        <select 
+          value={selectedSource} 
+          onChange={(e) => onSourceChange(e.target.value)}
+          style={{ 
+            padding: '0.5em',
+            marginBottom: '1em',
+            background: '#202020',
+            color: 'white',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            width: '200px'
+          }}
+        >
+          <option value="official">Official Only</option>
+          <option value="fanmade">Fan-made Only</option>
+          <option value="all">Official & Fan-made</option>
+        </select>
+      </div>
       <div style={{ margin: '1em 0' }}>
         <h3>Class Filters</h3>
         <div className="filterGrid">
@@ -41,12 +63,15 @@ function ClassFilterPage({
         <ul className="cardGrid" style={{ maxHeight: '70vh', overflowY: 'auto', listStyle: 'none', margin: 0 }}>
           {uniqueInvestigators.map(card => (
             <li key={card.code} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              {card.code ? (
+              {card.isFanMade ? (
+                <img src={card.imageUrl} alt={card.name} style={{ width: '100%', maxWidth: 340, height: 'auto', minHeight: 220, objectFit: 'contain', borderRadius: 8, boxShadow: '0 2px 12px #0002', background: '#222' }} />
+              ) : card.code ? (
                 <img src={`https://assets.arkham.build/optimized/${card.code}.avif`} alt={card.name} style={{ width: '100%', maxWidth: 340, height: 'auto', minHeight: 220, objectFit: 'contain', borderRadius: 8, boxShadow: '0 2px 12px #0002', background: '#222' }} />
               ) : (
                 <div style={{ width: '100%', maxWidth: 340, minHeight: 220, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', borderRadius: 8 }}>No Image</div>
               )}
               <p style={{ fontWeight: 'bold', textAlign: 'center', marginTop: '0.5rem' }}>{card.name}</p>
+              <p style={{ textAlign: 'center', color: '#888', fontSize: '0.9em', margin: '0.25rem 0' }}>{card.pack_name}</p>
             </li>
           ))}
         </ul>
