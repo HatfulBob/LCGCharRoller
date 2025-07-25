@@ -27,6 +27,7 @@ import './arkham.css';
 import { fetchInvestigatorCards } from './arkhamApi';
 import ClassFilterPage from './ClassFilterPage';
 import SelectorPage from './SelectorPage';
+import Footer from './Footer';
 
 function shuffle(array) {
   // Fisher-Yates shuffle
@@ -143,6 +144,7 @@ function App() {
           FACTION_ICONS={FACTION_ICONS}
         />
       )}
+      <Footer />
     </>
   );
 }
