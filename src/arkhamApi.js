@@ -21,10 +21,16 @@ export async function fetchInvestigatorCards() {
     return !traits.includes('bonded');
   });
 
-  // Deduplicate by name+subname (ignore pack)
+  // Deduplicate only if name, subname, text, deckbuilding, AND class are identical
   const seen = new Set();
   investigators = investigators.filter(card => {
-    const key = (card.real_name || card.name || '') + '|' + (card.real_subname || card.subname || '');
+    const deckOptionsStr = JSON.stringify(card.deck_options || {});
+    const key =
+      (card.real_name || card.name || '') + '|' +
+      (card.real_subname || card.subname || '') + '|' +
+      (card.real_text || card.text || '') + '|' +
+      deckOptionsStr + '|' +
+      (card.faction_code || '');
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
