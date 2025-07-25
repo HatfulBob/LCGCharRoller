@@ -54,7 +54,7 @@ function App() {
         setLoading(false);
       })
       .catch(e => {
-        setError(e.message);
+        setError(e && (e.stack || e.toString()));
         setLoading(false);
       });
   }, []);
@@ -220,7 +220,7 @@ function App() {
             padding: 0,
             margin: 0,
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateColumns: 'repeat(5, 1fr)',
             gap: '1em',
             justifyItems: 'center',
             alignItems: 'center',
