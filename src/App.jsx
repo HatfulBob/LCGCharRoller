@@ -25,7 +25,9 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import './arkham.css';
 import { fetchInvestigatorCards } from './arkhamApi';
+import { fetchHeroCards, extractTraits } from './marvelApi';
 import ClassFilterPage from './ClassFilterPage';
+import TraitFilterPage from './TraitFilterPage';
 import SelectorPage from './SelectorPage';
 import Footer from './Footer';
 
@@ -40,6 +42,7 @@ function shuffle(array) {
 }
 
 function App() {
+  const [gameType, setGameType] = useState('arkham'); // 'arkham' or 'marvel'
   const [allInvestigators, setAllInvestigators] = useState([]);
   const [filteredInvestigators, setFilteredInvestigators] = useState([]);
   const [filters, setFilters] = useState({});
@@ -52,17 +55,31 @@ function App() {
 
   useEffect(() => {
     setLoading(true);
-    fetchInvestigatorCards(selectedSource)
-      .then(cards => {
-        setAllInvestigators(cards);
-        setFilteredInvestigators(cards);
-        setLoading(false);
-      })
-      .catch(e => {
-        setError(e && (e.stack || e.toString()));
-        setLoading(false);
-      });
-  }, [selectedSource]);
+    if (gameType === 'arkham') {
+      fetchInvestigatorCards(selectedSource)
+        .then(cards => {
+          setAllInvestigators(cards);
+          setFilteredInvestigators(cards);
+          setLoading(false);
+        })
+        .catch(e => {
+          setError(e && (e.stack || e.toString()));
+          setLoading(false);
+        });
+    } else {
+      // Marvel Champions - ignore selectedSource
+      fetchHeroCards()
+        .then(cards => {
+          setAllInvestigators(cards);
+          setFilteredInvestigators(cards);
+          setLoading(false);
+        })
+        .catch(e => {
+          setError(e && (e.stack || e.toString()));
+          setLoading(false);
+        });
+    }
+  }, [selectedSource, gameType]);
 
 
   // Faction/class filtering with include/exclude logic
@@ -78,11 +95,25 @@ function App() {
     factions.reduce((acc, f) => ({ ...acc, [f]: 'include' }), {})
   );
 
+  // Marvel Champions trait filtering
+  const allTraits = gameType === 'marvel' ? extractTraits(allInvestigators) : [];
+  const [traitFilter, setTraitFilter] = useState(
+    allTraits.reduce((acc, t) => ({ ...acc, [t]: 'include' }), {})
+  );
+
   useEffect(() => {
     // Update factionFilter if new factions are loaded
     setFactionFilter(factions.reduce((acc, f) => ({ ...acc, [f]: factionFilter[f] || 'include' }), {}));
     // eslint-disable-next-line
   }, [allInvestigators]);
+
+  useEffect(() => {
+    // Update traitFilter if new traits are loaded
+    if (gameType === 'marvel') {
+      setTraitFilter(allTraits.reduce((acc, t) => ({ ...acc, [t]: traitFilter[t] || 'include' }), {}));
+    }
+    // eslint-disable-next-line
+  }, [allInvestigators, gameType]);
 
   function handleFactionRadioChange(faction, value) {
     const newFilter = { ...factionFilter, [faction]: value };
@@ -91,6 +122,24 @@ function App() {
     let filtered = allInvestigators.filter(card => {
       if (newFilter[card.faction_code] === 'exclude') return false;
       return true;
+    });
+    setFilteredInvestigators(filtered);
+  }
+
+  function handleTraitChange(trait, value) {
+    const newFilter = { ...traitFilter, [trait]: value };
+    setTraitFilter(newFilter);
+    // Apply filter - hero must have at least one included trait
+    let filtered = allInvestigators.filter(card => {
+      if (!card.traits) return false;
+      const heroTraits = card.traits
+        .split('.')
+        .map(t => t.trim())
+        .filter(t => t.length > 0);
+      
+      // Check if any of the hero's traits are included
+      const hasIncludedTrait = heroTraits.some(t => newFilter[t] === 'include');
+      return hasIncludedTrait;
     });
     setFilteredInvestigators(filtered);
   }
@@ -112,7 +161,7 @@ function App() {
     setQueue(queue.slice(1));
   }
 
-  if (loading) return <div>Loading Arkham Horror investigators...</div>;
+  if (loading) return <div>Loading {gameType === 'arkham' ? 'Arkham Horror investigators' : 'Marvel Champions heroes'}...</div>;
   if (error) return <div>Error: {error}</div>;
 
   // Remove duplicate investigators by name+textbox
@@ -128,16 +177,55 @@ function App() {
   return (
     <>
       {!started ? (
-        <ClassFilterPage
-          factions={factions}
-          FACTION_ICONS={FACTION_ICONS}
-          factionFilter={factionFilter}
-          handleFactionRadioChange={handleFactionRadioChange}
-          uniqueInvestigators={uniqueInvestigators}
-          startQueue={startQueue}
-          selectedSource={selectedSource}
-          onSourceChange={setSelectedSource}
-        />
+        <>
+          <div style={{ maxWidth: '100vw', padding: '0.5rem' }}>
+            <div style={{ margin: '1em 0' }}>
+              <h3>Game Selection</h3>
+              <select 
+                value={gameType} 
+                onChange={(e) => {
+                  setGameType(e.target.value);
+                  setStarted(false);
+                  setAccepted([]);
+                  setQueue([]);
+                }}
+                style={{ 
+                  padding: '0.5em',
+                  marginBottom: '1em',
+                  background: '#202020',
+                  color: 'white',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  width: '250px',
+                  fontSize: '1em'
+                }}
+              >
+                <option value="arkham">Arkham Horror LCG</option>
+                <option value="marvel">Marvel Champions</option>
+              </select>
+            </div>
+          </div>
+          {gameType === 'arkham' ? (
+            <ClassFilterPage
+              factions={factions}
+              FACTION_ICONS={FACTION_ICONS}
+              factionFilter={factionFilter}
+              handleFactionRadioChange={handleFactionRadioChange}
+              uniqueInvestigators={uniqueInvestigators}
+              startQueue={startQueue}
+              selectedSource={selectedSource}
+              onSourceChange={setSelectedSource}
+            />
+          ) : (
+            <TraitFilterPage
+              traits={allTraits}
+              traitFilter={traitFilter}
+              handleTraitChange={handleTraitChange}
+              uniqueHeroes={uniqueInvestigators}
+              startQueue={startQueue}
+            />
+          )}
+        </>
       ) : (
         <SelectorPage
           queue={queue}
@@ -146,6 +234,7 @@ function App() {
           handleDeny={handleDeny}
           setStarted={setStarted}
           FACTION_ICONS={FACTION_ICONS}
+          gameType={gameType}
         />
       )}
       <Footer />
