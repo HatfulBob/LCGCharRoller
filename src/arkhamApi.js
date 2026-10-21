@@ -5,65 +5,82 @@ export const CardSource = {
   ALL: 'all'
 };
 
-async function fetchFanMadeInvestigators() {
-  const projectsUrl = 'https://api.arkham.build/v1/public/fan_made_projects/';
-  //console.log('Fetching from:', projectsUrl);
-  const response = await fetch(projectsUrl);
-  if (!response.ok) throw new Error('Failed to fetch fan made projects');
-  const apiResponse = await response.json();
-  //console.log('API Response:', apiResponse);
-  
-  // Extract the array of projects and their URLs
-  const projects = apiResponse.data || [];
-  //console.log('Projects:', projects);
-  
-  const investigatorPacks = projects.filter(pack => {
-    //console.log('Checking pack:', pack);
-    return Array.isArray(pack.meta?.types) && pack.meta?.types.includes('investigators');
-  });
- // console.log('Investigator packs:', investigatorPacks);
-  
-  // Fetch cards from each pack using the URL from meta.url
-  const allFanCards = await Promise.all(
-    investigatorPacks.map(async pack => {
-      const packUrl = pack.meta?.url;
-      if (!packUrl) {
-       // console.log(`No URL found for pack:`, pack);
-        return [];
-      }
-      
-      //console.log(`Fetching pack: ${pack.meta?.name} (${packUrl})`);
-      const packResponse = await fetch(packUrl);
-      if (!packResponse.ok) {
-       // console.log(`Failed to fetch pack: ${pack.meta?.name}`);
-        return [];
-      }
-      const packData = await packResponse.json();
-     // console.log(`Pack data for ${pack.meta?.name}:`, packData);
-      // Navigate through data.cards to get the actual cards array and transform the data
-      const cards = packData.data?.cards || [];
-      return cards.map(card => ({
-        ...card,
-        // Add isFanMade flag to distinguish source
-        isFanMade: true,
-        // Override image URL format for fan-made cards
-        imageUrl: card.image_url,
-        // Set the pack name to the project name
-        pack_name: pack.meta?.name
-      }));
-    })
-  );
+const FAN_MADE_CACHE_KEY = 'arkham-fan-made-investigators-v1';
+let fanMadeInvestigatorsPromise;
 
-  // Flatten all cards into a single array
-  return allFanCards.flat();
+async function fetchFanMadeInvestigators() {
+  const cachedInvestigators = sessionStorage.getItem(FAN_MADE_CACHE_KEY);
+  if (cachedInvestigators) {
+    try {
+      const investigators = JSON.parse(cachedInvestigators);
+      if (Array.isArray(investigators)) return investigators;
+    } catch (error) {
+      if (!(error instanceof SyntaxError)) throw error;
+    }
+    console.warn('Ignoring invalid fan-made investigator session cache.');
+    sessionStorage.removeItem(FAN_MADE_CACHE_KEY);
+  }
+
+  if (!fanMadeInvestigatorsPromise) {
+    fanMadeInvestigatorsPromise = (async () => {
+      const projectsResponse = await fetch('https://api.arkham.build/v2/public/fan-made-project-info');
+      if (!projectsResponse.ok) {
+        throw new Error(`Failed to fetch fan-made projects: ${projectsResponse.status} ${projectsResponse.statusText}`);
+      }
+      const projectsData = await projectsResponse.json();
+      if (!Array.isArray(projectsData.data)) {
+        throw new Error('Fan-made projects response did not contain a data array');
+      }
+
+      const investigatorProjects = projectsData.data.filter(project =>
+        project.meta?.types?.includes('investigators')
+      );
+      const projectCards = await Promise.all(investigatorProjects.map(async project => {
+        const packUrl = project.meta?.url;
+        if (!packUrl) {
+          throw new Error(`Fan-made investigator project "${project.meta?.name}" has no data URL`);
+        }
+
+        const packResponse = await fetch(packUrl);
+        if (!packResponse.ok) {
+          throw new Error(`Failed to fetch fan-made project "${project.meta?.name}": ${packResponse.status} ${packResponse.statusText}`);
+        }
+
+        const packData = await packResponse.json();
+        if (!Array.isArray(packData.data?.cards)) {
+          throw new Error(`Fan-made project "${project.meta?.name}" did not contain a cards array`);
+        }
+
+        return packData.data.cards
+          .filter(card => card.type_code === 'investigator')
+          .map(card => ({
+            ...card,
+            isFanMade: true,
+            imageUrl: card.image_url,
+            pack_name: project.meta.name
+          }));
+      }));
+
+      const investigators = projectCards.flat();
+      sessionStorage.setItem(FAN_MADE_CACHE_KEY, JSON.stringify(investigators));
+      return investigators;
+    })().catch(error => {
+      fanMadeInvestigatorsPromise = null;
+      throw error;
+    });
+  }
+
+  return fanMadeInvestigatorsPromise;
 }
 
 export async function fetchInvestigatorCards(source = CardSource.OFFICIAL) {
-  // Fetch official cards
-  const officialUrl = 'https://arkhamdb.com/api/public/cards/';
-  const officialResponse = await fetch(officialUrl);
-  if (!officialResponse.ok) throw new Error('Failed to fetch official cards');
-  const officialCards = await officialResponse.json();
+  let officialCards = [];
+  if (source !== CardSource.FANMADE) {
+    const officialUrl = 'https://arkhamdb.com/api/public/cards/';
+    const officialResponse = await fetch(officialUrl);
+    if (!officialResponse.ok) throw new Error('Failed to fetch official cards');
+    officialCards = await officialResponse.json();
+  }
 
   // Fetch fan-made cards if needed
   let fanCards = [];
