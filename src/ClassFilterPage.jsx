@@ -9,7 +9,9 @@ function ClassFilterPage({
   uniqueInvestigators,
   startQueue,
   selectedSource,
-  onSourceChange
+  onSourceChange,
+  selectedChapter,
+  onChapterChange
 }) {
   return (
     <div style={{ maxWidth: '100vw', overflowX: 'hidden', padding: '0.5rem' }}>
@@ -32,6 +34,26 @@ function ClassFilterPage({
           <option value="official">Official Only</option>
           <option value="fanmade">Fan-made Only</option>
           <option value="all">Official & Fan-made</option>
+        </select>
+      </div>
+      <div style={{ margin: '1em 0' }}>
+        <h3>Chapter Selection</h3>
+        <select 
+          value={selectedChapter} 
+          onChange={(e) => onChapterChange(e.target.value)}
+          style={{ 
+            padding: '0.5em',
+            marginBottom: '1em',
+            background: '#202020',
+            color: 'white',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            width: '200px'
+          }}
+        >
+          <option value="all">All Chapters</option>
+          <option value="chapter1">Chapter 1 (The Drowned City & Earlier)</option>
+          <option value="chapter2">Chapter 2 (Core 2026 Onwards)</option>
         </select>
       </div>
       <div style={{ margin: '1em 0' }}>

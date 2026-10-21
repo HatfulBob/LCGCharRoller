@@ -47,6 +47,7 @@ function App() {
   const [filteredInvestigators, setFilteredInvestigators] = useState([]);
   const [filters, setFilters] = useState({});
   const [selectedSource, setSelectedSource] = useState('official');
+  const [selectedChapter, setSelectedChapter] = useState('all');
   const [queue, setQueue] = useState([]);
   const [accepted, setAccepted] = useState([]);
   const [started, setStarted] = useState(false);
@@ -101,6 +102,31 @@ function App() {
     allTraits.reduce((acc, t) => ({ ...acc, [t]: 'include' }), {})
   );
 
+  // Determine chapter based on pack name
+  function getChapter(investigator) {
+    const packName = investigator.pack_name || '';
+    
+    // Chapter 2: Core 2026 onwards - includes revised core and any future releases
+    // List of known Chapter 2 packs (add more as they are released)
+    const chapter2Packs = [
+      'Core 2026',
+      'Revised Core Set 2026',
+      'The Feast of Hemlock Vale'
+    ];
+    
+    // Check if pack name contains any Chapter 2 identifier
+    const isChapter2 = chapter2Packs.some(pack => 
+      packName.toLowerCase().includes(pack.toLowerCase())
+    ) || packName.includes('2026');
+    
+    if (isChapter2) {
+      return 'chapter2';
+    }
+    
+    // Chapter 1: The Drowned City and earlier (everything else)
+    return 'chapter1';
+  }
+
   useEffect(() => {
     // Update factionFilter if new factions are loaded
     setFactionFilter(factions.reduce((acc, f) => ({ ...acc, [f]: factionFilter[f] || 'include' }), {}));
@@ -115,12 +141,34 @@ function App() {
     // eslint-disable-next-line
   }, [allInvestigators, gameType]);
 
+  useEffect(() => {
+    // Reapply filters when chapter selection changes
+    if (gameType === 'arkham') {
+      let filtered = allInvestigators.filter(card => {
+        if (factionFilter[card.faction_code] === 'exclude') return false;
+        // Apply chapter filter
+        if (selectedChapter !== 'all') {
+          const chapter = getChapter(card);
+          if (chapter !== selectedChapter) return false;
+        }
+        return true;
+      });
+      setFilteredInvestigators(filtered);
+    }
+    // eslint-disable-next-line
+  }, [selectedChapter]);
+
   function handleFactionRadioChange(faction, value) {
     const newFilter = { ...factionFilter, [faction]: value };
     setFactionFilter(newFilter);
     // Apply filter
     let filtered = allInvestigators.filter(card => {
       if (newFilter[card.faction_code] === 'exclude') return false;
+      // Apply chapter filter
+      if (selectedChapter !== 'all') {
+        const chapter = getChapter(card);
+        if (chapter !== selectedChapter) return false;
+      }
       return true;
     });
     setFilteredInvestigators(filtered);
@@ -215,6 +263,8 @@ function App() {
               startQueue={startQueue}
               selectedSource={selectedSource}
               onSourceChange={setSelectedSource}
+              selectedChapter={selectedChapter}
+              onChapterChange={setSelectedChapter}
             />
           ) : (
             <TraitFilterPage
