@@ -106,18 +106,9 @@ function App() {
   function getChapter(investigator) {
     const packName = investigator.pack_name || '';
     
-    // Chapter 2: Core 2026 onwards - includes revised core and any future releases
-    // List of known Chapter 2 packs (add more as they are released)
-    const chapter2Packs = [
-      'Core 2026',
-      'Revised Core Set 2026',
-      'The Feast of Hemlock Vale'
-    ];
-    
-    // Check if pack name contains any Chapter 2 identifier
-    const isChapter2 = chapter2Packs.some(pack => 
-      packName.toLowerCase().includes(pack.toLowerCase())
-    ) || packName.includes('2026');
+    // Chapter 2: any pack released in 2026 or later
+    const releaseYear = packName.match(/\b(20\d{2})\b/);
+    const isChapter2 = releaseYear !== null && Number(releaseYear[1]) >= 2026;
     
     if (isChapter2) {
       return 'chapter2';
